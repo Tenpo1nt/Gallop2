@@ -30,7 +30,7 @@ function LoginSignup() {
 
       const { data: loginUser, error: loginError } = await supabase
         .from('users')
-        .select('id, role, password')
+        .select('id, role, password, full_name, email')
         .eq('email', email)
         .maybeSingle();
 
@@ -48,6 +48,13 @@ function LoginSignup() {
         alert('Login failed: incorrect password.');
         return;
       }
+
+      localStorage.setItem('sessionUser', JSON.stringify({
+        id: loginUser.id,
+        role: loginUser.role,
+        full_name: loginUser.full_name,
+        email: loginUser.email
+      }));
 
       if (loginUser.role === 'pt') {
         navigate('/dashboard/pt');

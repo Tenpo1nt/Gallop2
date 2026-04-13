@@ -1,6 +1,35 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
+import { useNavigate } from 'react-router-dom';
+import { supabase } from './lib/supabase';
 import './Dashboard.css';
+
+type SessionUser = {
+  id: number;
+  role: string;
+  full_name: string;
+  email: string;
+};
+
+function getInitials(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "PT";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
+
+function toPatientCard(userId: number, fullName: string): Patient {
+  const safeName = fullName.trim() || `Patient ${userId}`;
+  return {
+    id: String(userId),
+    name: safeName,
+    condition: "Rehab Program",
+    progress: 0,
+    nextSession: "No upcoming session",
+    workoutId: null,
+    avatar: getInitials(safeName)
+  };
+}
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 const workoutIconOptions = [
@@ -129,28 +158,7 @@ const initialWorkouts: Workout[] = [
   },
 ];
 
-const initialPatients: Patient[] = [
-  { id: "PT001", name: "Sarah Johnson", condition: "Knee Recovery", progress: 72, nextSession: "Today 2:00PM", workoutId: "w1", avatar: "SJ" },
-  { id: "PT002", name: "Marcus Lee", condition: "Shoulder Rehab", progress: 45, nextSession: "Tomorrow 10:00AM", workoutId: "w3", avatar: "ML" },
-  { id: "PT003", name: "Elena Reyes", condition: "Lower Back Pain", progress: 88, nextSession: "Wed 3:00PM", workoutId: "w2", avatar: "ER" },
-  { id: "PT004", name: "James Kim", condition: "Ankle Sprain", progress: 30, nextSession: "Thu 1:00PM", workoutId: null, avatar: "JK" },
-];
-
-const initialMessages: MessageThread[] = [
-  { patientId: "PT001", messages: [
-    { from: "patient", text: "Hi Dr. Park! My knee has been feeling a bit sore after yesterday's session.", time: "9:02 AM" },
-    { from: "pt", text: "Thanks for letting me know Sarah! That's normal after the quad sets. Try icing it for 15 min.", time: "9:15 AM" },
-    { from: "patient", text: "Will do! Should I still do today's session?", time: "9:20 AM" },
-  ]},
-  { patientId: "PT002", messages: [
-    { from: "patient", text: "Good morning! Just finished the shoulder routine 💪", time: "8:45 AM" },
-    { from: "pt", text: "Great work Marcus! How did the band pull-aparts feel?", time: "8:50 AM" },
-  ]},
-  { patientId: "PT003", messages: [
-    { from: "patient", text: "Can we reschedule Wednesday's session to Thursday?", time: "Yesterday" },
-  ]},
-  { patientId: "PT004", messages: [] },
-];
+const initialMessages: MessageThread[] = [];
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const BLUE = "#3b82f6";
@@ -205,7 +213,11 @@ function PatientsPage({ patients, workouts, onUpdatePatient }: PatientsPageProps
           <button style={pillBtn(true)}>+ Add</button>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          {patients.map(p => (
+          {patients.length === 0 ? (
+            <div style={{ padding: "14px", borderRadius: "12px", background: "#f8faff", border: "1px solid #e0ecff", color: "#64748b", fontSize: "12px", textAlign: "center" }}>
+              No patients assigned yet.
+            </div>
+          ) : patients.map(p => (
             <div key={p.id} onClick={() => { setSelected(p.id); setChangingWorkout(false); }} style={{
               padding: "13px 14px", borderRadius: "14px",
               border: `2px solid ${selected === p.id ? BLUE : "#e0ecff"}`,
@@ -867,15 +879,35 @@ interface MessagesPageProps {
 }
 
 function MessagesPage({ patients }: MessagesPageProps) {
-  const [selected, setSelected] = useState<string>("PT001");
+  const [selected, setSelected] = useState<string>("");
   const [input, setInput] = useState("");
   const [allMessages, setAllMessages] = useState<MessageThread[]>(initialMessages);
+
+  useEffect(() => {
+    setAllMessages((prev) => {
+      const map = new Map(prev.map((thread) => [thread.patientId, thread.messages]));
+      return patients.map((p) => ({
+        patientId: p.id,
+        messages: map.get(p.id) ?? []
+      }));
+    });
+
+    if (patients.length === 0) {
+      setSelected("");
+      return;
+    }
+
+    setSelected((prev) => {
+      const stillExists = patients.some((p) => p.id === prev);
+      return stillExists ? prev : patients[0].id;
+    });
+  }, [patients]);
 
   const thread = allMessages.find(m => m.patientId === selected);
   const patient = patients.find(p => p.id === selected);
 
   const send = () => {
-    if (!input.trim()) return;
+    if (!input.trim() || !selected) return;
     setAllMessages(prev => prev.map(m => m.patientId === selected
       ? { ...m, messages: [...m.messages, { from: "pt", text: input, time: "Just now" }] }
       : m
@@ -887,6 +919,11 @@ function MessagesPage({ patients }: MessagesPageProps) {
     <div style={{ display: "flex", gap: "20px", height: "560px" }}>
       <div style={{ ...card, width: "220px", flexShrink: 0, overflowY: "auto", padding: "16px" }}>
         <h2 style={{ margin: "0 0 14px", fontSize: "15px", fontWeight: 800, color: BLUE_DARK }}>Conversations</h2>
+        {patients.length === 0 && (
+          <div style={{ fontSize: "12px", color: "#94a3b8", textAlign: "center", padding: "12px" }}>
+            No patient conversations yet.
+          </div>
+        )}
         {patients.map(p => {
           const t = allMessages.find(m => m.patientId === p.id);
           const last = t?.messages?.slice(-1)[0];
@@ -944,13 +981,41 @@ function MessagesPage({ patients }: MessagesPageProps) {
 // ══════════════════════════════════════════════════════════════════════════════
 // PAGE: SETTINGS
 // ══════════════════════════════════════════════════════════════════════════════
-function SettingsPage() {
-  const [name, setName] = useState("Dr. Jamie Park");
-  const [email, setEmail] = useState("j.park@gallop.com");
-  const [notifications, setNotifications] = useState(true);
-  const [saved, setSaved] = useState(false);
+interface SettingsPageProps {
+  initialName: string;
+  initialEmail: string;
+  onSaveProfile: (name: string, email: string) => Promise<{ ok: boolean; message?: string }>;
+}
 
-  const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
+function SettingsPage({ initialName, initialEmail, onSaveProfile }: SettingsPageProps) {
+  const [name, setName] = useState(initialName);
+  const [email, setEmail] = useState(initialEmail);
+  const [notifications, setNotifications] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    setName(initialName);
+    setEmail(initialEmail);
+  }, [initialName, initialEmail]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setErrorMessage("");
+
+    const result = await onSaveProfile(name.trim(), email.trim());
+    setSaving(false);
+
+    if (!result.ok) {
+      setSaved(false);
+      setErrorMessage(result.message || "Failed to save changes.");
+      return;
+    }
+
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px", maxWidth: "520px" }}>
@@ -978,8 +1043,11 @@ function SettingsPage() {
       </div>
 
       <button onClick={handleSave} style={{ padding: "13px", borderRadius: "14px", border: "none", background: saved ? "#10b981" : `linear-gradient(135deg, #5ba3f5, #2563eb)`, fontWeight: 700, cursor: "pointer", color: "white", fontSize: "14px", transition: "background 0.3s" }}>
-        {saved ? "✓ Saved!" : "Save Changes"}
+        {saving ? "Saving..." : saved ? "✓ Saved!" : "Save Changes"}
       </button>
+      {errorMessage && (
+        <div style={{ color: "#dc2626", fontSize: "12px", fontWeight: 600 }}>{errorMessage}</div>
+      )}
     </div>
   );
 }
@@ -988,9 +1056,112 @@ function SettingsPage() {
 // MAIN DASHBOARD
 // ══════════════════════════════════════════════════════════════════════════════
 export default function PTDashboard() {
+  const navigate = useNavigate();
   const [activeNav, setActiveNav] = useState("patients");
-  const [patients, setPatients] = useState<Patient[]>(initialPatients);
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [workouts, setWorkouts] = useState<Workout[]>(initialWorkouts);
+  const [sessionUser, setSessionUser] = useState<SessionUser | null>(() => {
+    try {
+      const raw = localStorage.getItem('sessionUser');
+      if (!raw) return null;
+      return JSON.parse(raw) as SessionUser;
+    } catch {
+      return null;
+    }
+  });
+
+  const displayName = sessionUser?.full_name?.trim() || "Physical Therapist";
+  const displayInitials = getInitials(displayName);
+
+  useEffect(() => {
+    const loadAssignedPatients = async () => {
+      if (!sessionUser || sessionUser.role !== 'pt') {
+        setPatients([]);
+        return;
+      }
+
+      const { data: assignedRows, error: assignedError } = await supabase
+        .from('pt_patient_assignments')
+        .select('patient_user_id')
+        .eq('pt_user_id', sessionUser.id);
+
+      if (assignedError) {
+        console.error('Failed to load assigned patients:', assignedError.message);
+        setPatients([]);
+        return;
+      }
+
+      if (!assignedRows || assignedRows.length === 0) {
+        setPatients([]);
+        return;
+      }
+
+      const patientUserIds = assignedRows
+        .map((row) => Number(row.patient_user_id))
+        .filter((id) => Number.isFinite(id));
+
+      if (patientUserIds.length === 0) {
+        setPatients([]);
+        return;
+      }
+
+      const { data: patientUsers, error: usersError } = await supabase
+        .from('users')
+        .select('id, full_name')
+        .in('id', patientUserIds);
+
+      if (usersError) {
+        console.error('Failed to load patient names:', usersError.message);
+      }
+
+      const nameById = new Map<number, string>(
+        (patientUsers ?? []).map((user) => [Number(user.id), user.full_name ?? `Patient ${user.id}`])
+      );
+
+      const cards = patientUserIds.map((id) => toPatientCard(id, nameById.get(id) ?? `Patient ${id}`));
+      setPatients(cards);
+    };
+
+    void loadAssignedPatients();
+  }, [sessionUser]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('sessionUser');
+    navigate('/auth');
+  };
+
+  const handleSaveProfile = async (name: string, email: string) => {
+    if (!sessionUser) {
+      return { ok: false, message: "No active session user found." };
+    }
+
+    if (!name || !email) {
+      return { ok: false, message: "Name and email are required." };
+    }
+
+    const { error } = await supabase
+      .from('users')
+      .update({
+        full_name: name,
+        email,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', sessionUser.id);
+
+    if (error) {
+      return { ok: false, message: error.message };
+    }
+
+    const updatedSessionUser: SessionUser = {
+      ...sessionUser,
+      full_name: name,
+      email
+    };
+
+    setSessionUser(updatedSessionUser);
+    localStorage.setItem('sessionUser', JSON.stringify(updatedSessionUser));
+    return { ok: true };
+  };
 
   const updatePatient = (id: string, changes: Partial<Patient>) =>
     setPatients(prev => prev.map(p => p.id === id ? { ...p, ...changes } : p));
@@ -1033,7 +1204,7 @@ export default function PTDashboard() {
         <div style={{ background: "rgba(255,255,255,0.2)", borderRadius: "14px", padding: "11px 13px", marginBottom: "22px", display: "flex", alignItems: "center", gap: "9px", border: "1px solid rgba(255,255,255,0.3)" }}>
           <div style={{ width: "34px", height: "34px", background: "white", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px" }}>🩺</div>
           <div>
-            <div style={{ color: "white", fontWeight: 700, fontSize: "12px" }}>Dr. Jamie Park</div>
+            <div style={{ color: "white", fontWeight: 700, fontSize: "12px" }}>{displayName}</div>
             <div style={{ color: "rgba(255,255,255,0.75)", fontSize: "10px" }}>Physical Therapist</div>
           </div>
         </div>
@@ -1043,12 +1214,12 @@ export default function PTDashboard() {
             <button key={item.id} onClick={() => setActiveNav(item.id)} style={{ display: "flex", alignItems: "center", gap: "11px", padding: "10px 13px", borderRadius: "12px", border: "none", cursor: "pointer", background: activeNav === item.id ? "rgba(255,255,255,0.25)" : "transparent", color: "white", fontWeight: activeNav === item.id ? 700 : 500, fontSize: "13px", textAlign: "left" }}>
               <span style={{ fontSize: "15px" }}>{item.icon}</span>
               {item.label}
-              {item.id === "messages" && <span style={{ marginLeft: "auto", background: "#f97316", color: "white", borderRadius: "99px", fontSize: "10px", fontWeight: 800, padding: "2px 6px" }}>3</span>}
+              {item.id === "messages" && patients.length > 0 && <span style={{ marginLeft: "auto", background: "#f97316", color: "white", borderRadius: "99px", fontSize: "10px", fontWeight: 800, padding: "2px 6px" }}>{patients.length}</span>}
             </button>
           ))}
         </nav>
 
-        <button style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 13px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.3)", cursor: "pointer", background: "transparent", color: "rgba(255,255,255,0.85)", fontWeight: 600, fontSize: "13px" }}>
+        <button onClick={handleLogout} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 13px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.3)", cursor: "pointer", background: "transparent", color: "rgba(255,255,255,0.85)", fontWeight: 600, fontSize: "13px" }}>
           <span>🚪</span> Log Out
         </button>
       </div>
@@ -1062,14 +1233,20 @@ export default function PTDashboard() {
           </div>
           <div style={{ display: "flex", gap: "10px" }}>
             <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", cursor: "pointer" }}>🔔</div>
-            <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: BLUE, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 800, color: "white", boxShadow: "0 2px 8px rgba(59,130,246,0.4)" }}>JP</div>
+            <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: BLUE, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 800, color: "white", boxShadow: "0 2px 8px rgba(59,130,246,0.4)" }}>{displayInitials}</div>
           </div>
         </div>
 
         {activeNav === "patients" && <PatientsPage patients={patients} workouts={workouts} onUpdatePatient={updatePatient} />}
         {activeNav === "workouts" && <WorkoutsPage workouts={workouts} onSave={saveWorkout} onDelete={deleteWorkout} />}
         {activeNav === "messages" && <MessagesPage patients={patients} />}
-        {activeNav === "settings" && <SettingsPage />}
+        {activeNav === "settings" && (
+          <SettingsPage
+            initialName={displayName}
+            initialEmail={sessionUser?.email ?? ""}
+            onSaveProfile={handleSaveProfile}
+          />
+        )}
       </div>
     </div>
   );
