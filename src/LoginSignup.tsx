@@ -243,7 +243,7 @@ function LoginSignup() {
                     type="text"
                     id="fullName"
                     name="fullName"
-                    placeholder="Enter your full name"
+                    placeholder="Enter your Full name"
                     required
                   />
                 </div>
