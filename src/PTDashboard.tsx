@@ -5,7 +5,7 @@ import { supabase } from './lib/supabase';
 import './Dashboard.css';
 
 type SessionUser = {
-  id: number;
+  id: string | number;
   role: string;
   full_name: string;
   email: string;
@@ -18,10 +18,11 @@ function getInitials(fullName: string): string {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
-function toPatientCard(userId: number, fullName: string): Patient {
+function toPatientCard(userId: string | number, fullName: string): Patient {
+  const idText = String(userId);
   const safeName = fullName.trim() || `Patient ${userId}`;
   return {
-    id: String(userId),
+    id: idText,
     name: safeName,
     condition: "Rehab Program",
     progress: 0,
@@ -1075,7 +1076,7 @@ export default function PTDashboard() {
 
   useEffect(() => {
     const loadAssignedPatients = async () => {
-      if (!sessionUser || sessionUser.role !== 'pt') {
+      if (!sessionUser) {
         setPatients([]);
         return;
       }
@@ -1097,33 +1098,75 @@ export default function PTDashboard() {
       }
 
       const patientUserIds = assignedRows
-        .map((row) => Number(row.patient_user_id))
-        .filter((id) => Number.isFinite(id));
+        .map((row: { patient_user_id: string | number | null }) => row.patient_user_id)
+        .filter((id): id is string | number => id !== null && id !== undefined)
+        .map((id) => String(id));
 
       if (patientUserIds.length === 0) {
         setPatients([]);
         return;
       }
 
+      const uniquePatientIds = Array.from(new Set(patientUserIds));
+
       const { data: patientUsers, error: usersError } = await supabase
         .from('users')
         .select('id, full_name')
-        .in('id', patientUserIds);
+        .in('id', uniquePatientIds);
 
       if (usersError) {
         console.error('Failed to load patient names:', usersError.message);
       }
 
-      const nameById = new Map<number, string>(
-        (patientUsers ?? []).map((user) => [Number(user.id), user.full_name ?? `Patient ${user.id}`])
+      const nameById = new Map<string, string>(
+        (patientUsers ?? []).map((user) => [String(user.id), user.full_name ?? `Patient ${user.id}`])
       );
 
-      const cards = patientUserIds.map((id) => toPatientCard(id, nameById.get(id) ?? `Patient ${id}`));
+      const cards = uniquePatientIds.map((id) => toPatientCard(id, nameById.get(id) ?? `Patient ${id}`));
       setPatients(cards);
     };
 
+    const loadWorkouts = async () => {
+    if(!sessionUser) return;
+
+
+    try{
+      const {data, error}= await supabase
+        .from("Workouts")
+        .select("*")
+        .eq("P_ID", sessionUser.id);
+
+
+      if(error){
+        console.error("Error fetching workouts:", error.message);
+        return;
+      }
+
+
+      const formatted: Workout[] = (data || []).map((row: any) => ({
+        id: String(row.WO_ID),
+        name: row.WO_Name,
+        icon: row.WO_Icon || "🏋️",
+        exercises:[
+          {
+            name: row.Exercise_Name,
+            sets: row.Sets,
+            reps: row.Reps,
+            duration: row.Rest_Time,
+          }
+        ]
+    }));
+    setWorkouts(formatted);
+    } catch (err) {
+      console.error("Unexpected error loading workouts:", err);
+    }
+  };
+
     void loadAssignedPatients();
+    void loadWorkouts();
   }, [sessionUser]);
+
+
 
   const handleLogout = () => {
     localStorage.removeItem('sessionUser');
