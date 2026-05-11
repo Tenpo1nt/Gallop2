@@ -138,7 +138,7 @@ function LoginSignup() {
           updated_at: new Date().toISOString()
         })
         .eq('id', existingUser.id)
-        .select('id, email');
+        .select('id, email, full_name');
 
       if (updateError) {
         alert(`Signup failed: ${updateError.message}`);
@@ -150,7 +150,28 @@ function LoginSignup() {
         return;
       }
 
-      alert('Signup successful! You can now log in.');
+      // Fetch the complete updated user record to verify
+      const { data: verifiedUser, error: verifyError } = await supabase
+        .from('users')
+        .select('id, role, password, full_name, email')
+        .eq('id', existingUser.id)
+        .maybeSingle();
+
+      if (verifyError || !verifiedUser) {
+        alert(`Signup successful but verification failed. Please log in manually.`);
+        navigate('/?mode=login');
+        return;
+      }
+
+      // Store the session and redirect
+      localStorage.setItem('sessionUser', JSON.stringify({
+        id: verifiedUser.id,
+        role: verifiedUser.role,
+        full_name: verifiedUser.full_name,
+        email: verifiedUser.email
+      }));
+
+      alert('Signup successful! Logging you in...');
 
       // Redirect based on role
       if (selectedRole === 'pt') {
