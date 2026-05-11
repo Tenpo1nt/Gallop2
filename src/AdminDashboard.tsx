@@ -6,22 +6,27 @@ import "./Dashboard.css";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type SessionUser = {
-  id: number;
+  id: string | number;
   role: string;
   full_name: string;
   email: string;
 };
 
 type DBUser = {
-  id: number;
+  id: string | number;
   full_name: string | null;
   email: string | null;
   role: string;
 };
 
 type Assignment = {
-  pt_user_id: number;
-  patient_user_id: number;
+  pt_id: string | number;
+  patient_id: string | number;
+};
+
+type AssignResult = {
+  ok: boolean;
+  message?: string;
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -74,24 +79,27 @@ interface PatientsPageProps {
   patients: DBUser[];
   pts: DBUser[];
   assignments: Assignment[];
-  onAssign: (patientId: number, ptId: number | null) => Promise<void>;
+  onAssign: (patientId: string | number, ptId: string | number | null) => Promise<AssignResult>;
   loading: boolean;
 }
 
 function PatientsPage({ patients, pts, assignments, onAssign, loading }: PatientsPageProps) {
-  const [selected, setSelected] = useState<number | null>(null);
+  const [selected, setSelected] = useState<string | null>(null);
   const [assigning, setAssigning] = useState(false);
+  const [assignMessage, setAssignMessage] = useState<string | null>(null);
 
-  const getAssignedPt = (patientId: number): DBUser | null => {
-    const a = assignments.find((x) => x.patient_user_id === patientId);
+  const sameId = (a: string | number, b: string | number) => String(a) === String(b);
+
+  const getAssignedPt = (patientId: string | number): DBUser | null => {
+    const a = assignments.find((x) => sameId(x.patient_id, patientId));
     if (!a) return null;
-    return pts.find((p) => p.id === a.pt_user_id) ?? null;
+    return pts.find((p) => sameId(p.id, a.pt_id)) ?? null;
   };
 
-  const unassignedPatients = patients.filter((p) => !assignments.some((a) => a.patient_user_id === p.id));
-  const assignedPatients = patients.filter((p) => assignments.some((a) => a.patient_user_id === p.id));
+  const unassignedPatients = patients.filter((p) => !assignments.some((a) => sameId(a.patient_id, p.id)));
+  const assignedPatients = patients.filter((p) => assignments.some((a) => sameId(a.patient_id, p.id)));
 
-  const selectedPatient = selected !== null ? patients.find((p) => p.id === selected) ?? null : null;
+  const selectedPatient = selected !== null ? patients.find((p) => sameId(p.id, selected)) ?? null : null;
   const currentPt = selectedPatient ? getAssignedPt(selectedPatient.id) : null;
   const [selectPtId, setSelectPtId] = useState<string>("");
 
@@ -99,14 +107,20 @@ function PatientsPage({ patients, pts, assignments, onAssign, loading }: Patient
     if (selectedPatient) {
       setSelectPtId(currentPt ? String(currentPt.id) : "");
       setAssigning(false);
+      setAssignMessage(null);
     }
   }, [selected]);
 
   const handleAssign = async () => {
     if (!selectedPatient) return;
     setAssigning(true);
-    await onAssign(selectedPatient.id, selectPtId ? Number(selectPtId) : null);
+    setAssignMessage(null);
+    const result = await onAssign(selectedPatient.id, selectPtId || null);
     setAssigning(false);
+
+    if (!result.ok) {
+      setAssignMessage(result.message ?? "Failed to update assignment.");
+    }
   };
 
   if (loading) {
@@ -131,7 +145,7 @@ function PatientsPage({ patients, pts, assignments, onAssign, loading }: Patient
               ⚠ Unassigned ({unassignedPatients.length})
             </div>
             {unassignedPatients.map((p) => (
-              <PatientRow key={p.id} patient={p} assignedPt={null} selected={selected === p.id} onClick={() => setSelected(p.id)} />
+              <PatientRow key={String(p.id)} patient={p} assignedPt={null} selected={selected !== null && sameId(selected, p.id)} onClick={() => setSelected(String(p.id))} />
             ))}
           </div>
         )}
@@ -142,7 +156,7 @@ function PatientsPage({ patients, pts, assignments, onAssign, loading }: Patient
               ✓ Assigned ({assignedPatients.length})
             </div>
             {assignedPatients.map((p) => (
-              <PatientRow key={p.id} patient={p} assignedPt={getAssignedPt(p.id)} selected={selected === p.id} onClick={() => setSelected(p.id)} />
+              <PatientRow key={String(p.id)} patient={p} assignedPt={getAssignedPt(p.id)} selected={selected !== null && sameId(selected, p.id)} onClick={() => setSelected(String(p.id))} />
             ))}
           </div>
         )}
@@ -217,6 +231,11 @@ function PatientsPage({ patients, pts, assignments, onAssign, loading }: Patient
               >
                 {assigning ? "Saving..." : currentPt ? "Update Assignment" : "Assign PT"}
               </button>
+              {assignMessage && (
+                <div style={{ marginTop: "10px", color: "#dc2626", fontSize: "12px", fontWeight: 600 }}>
+                  {assignMessage}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -255,14 +274,16 @@ interface TherapistsPageProps {
 }
 
 function TherapistsPage({ pts, patients, assignments, loading }: TherapistsPageProps) {
-  const [selected, setSelected] = useState<number | null>(null);
+  const [selected, setSelected] = useState<string | null>(null);
 
-  const getPtPatients = (ptId: number): DBUser[] => {
-    const ids = assignments.filter((a) => a.pt_user_id === ptId).map((a) => a.patient_user_id);
-    return patients.filter((p) => ids.includes(p.id));
+  const sameId = (a: string | number, b: string | number) => String(a) === String(b);
+
+  const getPtPatients = (ptId: string | number): DBUser[] => {
+    const ids = assignments.filter((a) => sameId(a.pt_id, ptId)).map((a) => String(a.patient_id));
+    return patients.filter((p) => ids.includes(String(p.id)));
   };
 
-  const selectedPt = selected !== null ? pts.find((p) => p.id === selected) ?? null : null;
+  const selectedPt = selected !== null ? pts.find((p) => sameId(p.id, selected)) ?? null : null;
   const selectedPatients = selectedPt ? getPtPatients(selectedPt.id) : [];
 
   if (loading) {
@@ -287,9 +308,9 @@ function TherapistsPage({ pts, patients, assignments, loading }: TherapistsPageP
           const count = getPtPatients(pt.id).length;
           return (
             <div
-              key={pt.id}
-              onClick={() => setSelected(pt.id)}
-              style={{ padding: "11px 13px", borderRadius: "13px", border: `2px solid ${selected === pt.id ? BLUE : "#e0ecff"}`, background: selected === pt.id ? BLUE_LIGHT : "#f8faff", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}
+              key={String(pt.id)}
+              onClick={() => setSelected(String(pt.id))}
+              style={{ padding: "11px 13px", borderRadius: "13px", border: `2px solid ${selected !== null && sameId(selected, pt.id) ? BLUE : "#e0ecff"}`, background: selected !== null && sameId(selected, pt.id) ? BLUE_LIGHT : "#f8faff", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}
             >
               <div style={{ width: "36px", height: "36px", borderRadius: "50%", flexShrink: 0, background: "linear-gradient(135deg, #34d399, #059669)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 800, fontSize: "12px" }}>
                 {getInitials(pt.full_name ?? "?")}
@@ -570,7 +591,7 @@ export default function AdminDashboard() {
 
     const [usersRes, assignmentsRes] = await Promise.all([
       supabase.from("users").select("id, full_name, email, role"),
-      supabase.from("pt_patient_assignments").select("pt_user_id, patient_user_id"),
+      supabase.from("pt_patient_assignments").select("pt_id, patient_id"),
     ]);
 
     if (!usersRes.error && usersRes.data) {
@@ -581,9 +602,9 @@ export default function AdminDashboard() {
 
     if (!assignmentsRes.error && assignmentsRes.data) {
       setAssignments(
-        (assignmentsRes.data as { pt_user_id: number; patient_user_id: number }[]).map((a) => ({
-          pt_user_id: Number(a.pt_user_id),
-          patient_user_id: Number(a.patient_user_id),
+        (assignmentsRes.data as { pt_id: string | number; patient_id: string | number }[]).map((a) => ({
+          pt_id: a.pt_id,
+          patient_id: a.patient_id,
         }))
       );
     }
@@ -600,15 +621,29 @@ export default function AdminDashboard() {
     navigate("/auth");
   };
 
-  const handleAssign = async (patientId: number, ptId: number | null) => {
+  const handleAssign = async (patientId: string | number, ptId: string | number | null): Promise<AssignResult> => {
     // Remove existing assignment for this patient
-    await supabase.from("pt_patient_assignments").delete().eq("patient_user_id", patientId);
+    const { error: deleteError } = await supabase
+      .from("pt_patient_assignments")
+      .delete()
+      .eq("patient_id", patientId);
+
+    if (deleteError) {
+      return { ok: false, message: `Could not clear previous assignment: ${deleteError.message}` };
+    }
 
     if (ptId !== null) {
-      await supabase.from("pt_patient_assignments").insert({ pt_user_id: ptId, patient_user_id: patientId });
+      const { error: insertError } = await supabase
+        .from("pt_patient_assignments")
+        .insert({ pt_id: ptId, patient_id: patientId });
+
+      if (insertError) {
+        return { ok: false, message: `Could not assign PT: ${insertError.message}` };
+      }
     }
 
     await loadData();
+    return { ok: true };
   };
 
   const handleSaveProfile = async (name: string, email: string): Promise<{ ok: boolean; message?: string }> => {
@@ -636,7 +671,7 @@ export default function AdminDashboard() {
   };
 
   const subtitles: Record<string, string> = {
-    patients: `${patients.length} patients · ${assignments.length} assigned · ${patients.length - assignments.filter((a) => patients.some((p) => p.id === a.patient_user_id)).length} unassigned`,
+    patients: `${patients.length} patients · ${assignments.length} assigned · ${patients.length - assignments.filter((a) => patients.some((p) => String(p.id) === String(a.patient_id))).length} unassigned`,
     therapists: `${pts.length} physical therapists`,
     "add-user": "Add patients and PTs to the system",
     settings: "Manage your admin account",

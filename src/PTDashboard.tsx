@@ -1083,8 +1083,8 @@ export default function PTDashboard() {
 
       const { data: assignedRows, error: assignedError } = await supabase
         .from('pt_patient_assignments')
-        .select('patient_user_id')
-        .eq('pt_user_id', sessionUser.id);
+        .select('patient_id')
+        .eq('pt_id', sessionUser.id);
 
       if (assignedError) {
         console.error('Failed to load assigned patients:', assignedError.message);
@@ -1098,7 +1098,7 @@ export default function PTDashboard() {
       }
 
       const patientUserIds = assignedRows
-        .map((row: { patient_user_id: string | number | null }) => row.patient_user_id)
+        .map((row: { patient_id: string | number | null }) => row.patient_id)
         .filter((id): id is string | number => id !== null && id !== undefined)
         .map((id) => String(id));
 
