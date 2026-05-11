@@ -49,11 +49,46 @@ function LoginSignup() {
         return;
       }
 
+      let assignedPtId: string | number | null = null;
+      let assignedPtName: string | null = null;
+
+      if (loginUser.role === 'patient') {
+        const { data: assignmentRows, error: assignmentError } = await supabase
+          .from('pt_patient_assignments')
+          .select('pt_id')
+          .eq('patient_id', loginUser.id);
+
+        if (assignmentError) {
+          alert(`Could not verify PT assignment: ${assignmentError.message}`);
+          return;
+        }
+
+        const firstAssignedPtId = assignmentRows?.[0]?.pt_id ?? null;
+        assignedPtId = firstAssignedPtId;
+
+        if (firstAssignedPtId !== null && firstAssignedPtId !== undefined) {
+          const { data: ptUser, error: ptLookupError } = await supabase
+            .from('users')
+            .select('id, full_name')
+            .eq('id', firstAssignedPtId)
+            .maybeSingle();
+
+          if (ptLookupError) {
+            alert(`Could not load assigned PT details: ${ptLookupError.message}`);
+            return;
+          }
+
+          assignedPtName = ptUser?.full_name ?? null;
+        }
+      }
+
       localStorage.setItem('sessionUser', JSON.stringify({
         id: loginUser.id,
         role: loginUser.role,
         full_name: loginUser.full_name,
-        email: loginUser.email
+        email: loginUser.email,
+        assigned_pt_id: assignedPtId,
+        assigned_pt_name: assignedPtName
       }));
 
       if (loginUser.role === 'pt') {

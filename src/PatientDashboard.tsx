@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "./lib/supabase";
 import "./Dashboard.css";
 
 type PT = {
@@ -8,6 +9,13 @@ type PT = {
   name: string;
   specialty: string;
   avatar: string;
+};
+
+type SessionUser = {
+  id: string | number;
+  role: string;
+  full_name: string;
+  email: string;
 };
 
 type Exercise = {
@@ -61,20 +69,12 @@ const navItems = [
   { id: "settings", label: "Settings", icon: "⚙️" },
 ] as const;
 
-const mockPTs: PT[] = [
-  {
-    id: "pt-1",
-    name: "Bob Martin",
-    specialty: "Physical Therapist",
-    avatar: "BM",
-  },
-  {
-    id: "pt-2",
-    name: "Edgar Margarian",
-    specialty: "67 Specialist",
-    avatar: "EM",
-  },
-];
+function getInitials(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "PT";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
 
 const mockAssignedWorkouts: AssignedWorkout[] = [
   {
@@ -130,7 +130,7 @@ function sectionTitleStyle(): CSSProperties {
   };
 }
 
-function PatientHomePage() {
+function PatientHomePage({ assignedPTs }: { assignedPTs: PT[] }) {
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<string>(mockAssignedWorkouts[0]?.id ?? "");
   const [workouts, setWorkouts] = useState<AssignedWorkout[]>(mockAssignedWorkouts);
 
@@ -189,47 +189,63 @@ function PatientHomePage() {
               padding: "4px 10px",
             }}
           >
-            {mockPTs.length} active
+            {assignedPTs.length} active
           </div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "18px" }}>
-          {mockPTs.map((pt) => (
+          {assignedPTs.length === 0 ? (
             <div
-              key={pt.id}
               style={{
-                padding: "13px 14px",
-                borderRadius: "14px",
-                border: `2px solid ${PINK_MID}`,
-                background: PINK_LIGHT,
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
+                padding: "14px",
+                borderRadius: "12px",
+                background: "#fff",
+                border: `1px solid ${PINK_MID}`,
+                color: "#64748b",
+                fontSize: "12px",
+                textAlign: "center",
               }}
             >
+              No PT assigned yet. Contact your administrator.
+            </div>
+          ) : (
+            assignedPTs.map((pt) => (
               <div
+                key={pt.id}
                 style={{
-                  width: "38px",
-                  height: "38px",
-                  borderRadius: "50%",
-                  flexShrink: 0,
-                  background: "linear-gradient(135deg, #f472b6, #ec4899)",
+                  padding: "13px 14px",
+                  borderRadius: "14px",
+                  border: `2px solid ${PINK_MID}`,
+                  background: PINK_LIGHT,
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
-                  fontWeight: 800,
-                  fontSize: "13px",
+                  gap: "12px",
                 }}
               >
-                {pt.avatar}
+                <div
+                  style={{
+                    width: "38px",
+                    height: "38px",
+                    borderRadius: "50%",
+                    flexShrink: 0,
+                    background: "linear-gradient(135deg, #f472b6, #ec4899)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "white",
+                    fontWeight: 800,
+                    fontSize: "13px",
+                  }}
+                >
+                  {pt.avatar}
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: "13px", color: PINK_DARK }}>{pt.name}</div>
+                  <div style={{ fontSize: "11px", color: "#64748b" }}>{pt.specialty}</div>
+                </div>
               </div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: "13px", color: PINK_DARK }}>{pt.name}</div>
-                <div style={{ fontSize: "11px", color: "#64748b" }}>{pt.specialty}</div>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
         <h3
@@ -682,6 +698,81 @@ function SettingsPage() {
 export default function PatientDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<(typeof navItems)[number]["id"]>("dashboard");
+  const [assignedPTs, setAssignedPTs] = useState<PT[]>([]);
+  const [sessionUser, setSessionUser] = useState<SessionUser | null>(() => {
+    try {
+      const raw = localStorage.getItem("sessionUser");
+      if (!raw) return null;
+      return JSON.parse(raw) as SessionUser;
+    } catch {
+      return null;
+    }
+  });
+
+  const displayName = sessionUser?.full_name?.trim() || "Patient";
+  const displayInitials = getInitials(displayName);
+
+  useEffect(() => {
+    const loadAssignedPTs = async () => {
+      if (!sessionUser) {
+        setAssignedPTs([]);
+        return;
+      }
+
+      const { data: assignmentRows, error: assignmentError } = await supabase
+        .from("pt_patient_assignments")
+        .select("pt_id")
+        .eq("patient_id", sessionUser.id);
+
+      if (assignmentError) {
+        console.error("Failed to load assigned PTs:", assignmentError.message);
+        setAssignedPTs([]);
+        return;
+      }
+
+      const ptIds = (assignmentRows ?? [])
+        .map((row: { pt_id: string | number | null }) => row.pt_id)
+        .filter((id): id is string | number => id !== null && id !== undefined)
+        .map((id) => String(id));
+
+      const uniquePtIds = Array.from(new Set(ptIds));
+      if (uniquePtIds.length === 0) {
+        setAssignedPTs([]);
+        return;
+      }
+
+      const { data: ptUsers, error: ptUsersError } = await supabase
+        .from("users")
+        .select("id, full_name")
+        .in("id", uniquePtIds);
+
+      if (ptUsersError) {
+        console.error("Failed to load PT user details:", ptUsersError.message);
+        setAssignedPTs([]);
+        return;
+      }
+
+      const mappedPTs: PT[] = (ptUsers ?? []).map((pt) => {
+        const name = pt.full_name?.trim() || `PT ${pt.id}`;
+        return {
+          id: String(pt.id),
+          name,
+          specialty: "Physical Therapist",
+          avatar: getInitials(name),
+        };
+      });
+
+      setAssignedPTs(mappedPTs);
+    };
+
+    void loadAssignedPTs();
+  }, [sessionUser]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("sessionUser");
+    setSessionUser(null);
+    navigate("/auth");
+  };
 
   return (
     <div className="dashboard-wrapper dashboard-patient">
@@ -694,7 +785,7 @@ export default function PatientDashboard() {
         <div className="sidebar-profile">
           <div className="sidebar-profile-icon">🌸</div>
           <div>
-            <div className="sidebar-profile-name">Joe Swanson</div>
+            <div className="sidebar-profile-name">{displayName}</div>
             <div className="sidebar-profile-role">Patient</div>
           </div>
         </div>
@@ -715,7 +806,7 @@ export default function PatientDashboard() {
           ))}
         </nav>
 
-        <button className="sidebar-logout-btn" onClick={() => navigate("/")}>
+        <button className="sidebar-logout-btn" onClick={handleLogout}>
           <span>🚪</span>
           <span>Log Out</span>
         </button>
@@ -726,17 +817,17 @@ export default function PatientDashboard() {
           <div>
             <h1 className="dashboard-page-title">Patient Dashboard</h1>
             <p className="dashboard-page-subtitle">
-              2 physical therapists · 2 assigned workouts
+              {assignedPTs.length} physical therapist{assignedPTs.length === 1 ? "" : "s"} assigned · 2 assigned workouts
             </p>
           </div>
 
           <div className="dashboard-header-actions">
             <button className="dashboard-notif-btn">🔔</button>
-            <div className="dashboard-avatar">JS</div>
+            <div className="dashboard-avatar">{displayInitials}</div>
           </div>
         </div>
 
-        {activeTab === "dashboard" && <PatientHomePage />}
+        {activeTab === "dashboard" && <PatientHomePage assignedPTs={assignedPTs} />}
         {activeTab === "messages" && <MessagesPage />}
         {activeTab === "settings" && <SettingsPage />}
       </main>
