@@ -75,13 +75,14 @@ function LoginSignup() {
       const trimmedName = fullName.trim();
       console.log('Signup submitted:', { fullName: trimmedName, email, role: selectedRole });
 
-      // Find all users with matching name + role that don't have an email yet
+
+      // Find user with matching name + role + no password yet
       const { data: availableUsers, error: findError } = await supabase
         .from('users')
         .select('id, email')
         .eq('full_name', trimmedName)
         .eq('role', selectedRole)
-        .is('email', null);
+        .is('password', null);
 
       if (findError) {
         alert(`Signup failed: ${findError.message}`);
@@ -96,11 +97,13 @@ function LoginSignup() {
       // Pick the first available user slot
       const existingUser = availableUsers[0];
 
-      // Check if this email already exists in any account
+
+      // Check if this email already exists in a DIFFERENT account
       const { data: emailExists, error: emailError } = await supabase
         .from('users')
         .select('id')
         .eq('email', email)
+        .neq('id', existingUser.id)
         .maybeSingle();
 
       if (emailError) {
@@ -113,23 +116,7 @@ function LoginSignup() {
         return;
       }
 
-      // Check if this password already exists in any account
-      const { data: passwordExists, error: passwordError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('password', password)
-        .maybeSingle();
-
-      if (passwordError) {
-        alert(`Signup failed: ${passwordError.message}`);
-        return;
-      }
-
-      if (passwordExists) {
-        alert('This password already exists in our system.');
-        return;
-      }
-
+      // Save email and password to the existing user record  
       const { data: updatedRows, error: updateError } = await supabase
         .from('users')
         .update({
