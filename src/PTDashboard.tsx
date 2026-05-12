@@ -266,7 +266,7 @@ function PatientsPage({ patients, workouts, onUpdatePatient }: PatientsPageProps
               {assignedWorkout ? (
                 <>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-                    <div style={{ fontSize: "22px" }}>🏋️</div>
+                    <img src={assignedWorkout.icon} alt="icon" style={{ width: "28px", height: "28px", objectFit: "contain" }} />
                     <div>
                       <div style={{ fontWeight: 700, fontSize: "15px", color: BLUE_DARK }}>{assignedWorkout.name}</div>
                       <div style={{ fontSize: "12px", color: "#64748b" }}>{assignedWorkout.exercises.length} exercises</div>
