@@ -11,6 +11,15 @@ type SessionUser = {
   email: string;
 };
 
+type ExerciseSuggestion = {
+  id: string;
+  name: string;
+  bodyPart: string;
+  equipment: string;
+  target: string;
+  gifUrl: string;
+};
+
 function getInitials(fullName: string): string {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "PT";
@@ -364,6 +373,12 @@ function WorkoutsPage({ workouts, onSave, onDelete }: WorkoutsPageProps) {
   const [form, setForm] = useState<{ name: string; icon: string; exercises: Exercise[] }>({ name: "", icon: "🏋️", exercises: [] });
   const [newEx, setNewEx] = useState<Exercise>({ name: "", sets: "", reps: "", duration: "" });
 
+  const [exerciseQuery, setExerciseQuery] = useState("");
+const [exerciseSuggestions, setExerciseSuggestions] = useState<ExerciseSuggestion[]>([]);
+const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+const [suggestionsError, setSuggestionsError] = useState("");
+const [showSuggestions, setShowSuggestions] = useState(false);
+
   // const startCreate = () => { setForm({ name: "", exercises: [] }); setEditingId(null); setCreating(true); };
   // const startEdit = (w: Workout) => { setForm({ name: w.name, exercises: w.exercises.map(e => ({ ...e })) }); setEditingId(w.id); setCreating(true); };
   const startCreate = () => {
@@ -381,6 +396,66 @@ function WorkoutsPage({ workouts, onSave, onDelete }: WorkoutsPageProps) {
     setCreating(true);
   };
   
+const searchExercises = async (query: string) => {
+  if (!query.trim()) {
+    setExerciseSuggestions([]);
+    setSuggestionsError("");
+    return;
+  }
+
+  try {
+    setSuggestionsLoading(true);
+    setSuggestionsError("");
+
+    const response = await fetch(
+      `https://exercisedb.p.rapidapi.com/exercises/name/${encodeURIComponent(query)}`,
+      {
+        method: "GET",
+        headers: {
+          "x-rapidapi-key": import.meta.env.VITE_EXERCISEDB_API_KEY,
+          "x-rapidapi-host": "exercisedb.p.rapidapi.com",
+        },
+      }
+    );
+
+    const text = await response.text();
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${text}`);
+    }
+
+    const parsed = JSON.parse(text);
+
+    if (!Array.isArray(parsed)) {
+      throw new Error("Search response was not an array.");
+    }
+
+    setExerciseSuggestions(parsed.slice(0, 8));
+  } catch (err) {
+    console.error(err);
+    setSuggestionsError(err instanceof Error ? err.message : "Search failed");
+    setExerciseSuggestions([]);
+  } finally {
+    setSuggestionsLoading(false);
+  }
+};
+
+useEffect(() => {
+  const trimmed = exerciseQuery.trim();
+
+  if (!trimmed) {
+    setExerciseSuggestions([]);
+    setSuggestionsError("");
+    return;
+  }
+
+  const timer = setTimeout(() => {
+    void searchExercises(trimmed);
+  }, 300);
+
+  return () => clearTimeout(timer);
+}, [exerciseQuery]);
+
   const addExercise = () => {
     if (!newEx.name) return;
     setForm(f => ({ ...f, exercises: [...f.exercises, { ...newEx }] }));
@@ -392,7 +467,13 @@ function WorkoutsPage({ workouts, onSave, onDelete }: WorkoutsPageProps) {
     if (!form.name || form.exercises.length === 0) return;
     onSave(editingId, form);
     setCreating(false);
+  
+  setNewEx({ name: "", sets: "", reps: "", duration: "" });
+  setExerciseQuery("");
+  setExerciseSuggestions([]);
+  setShowSuggestions(false);
   };
+  
 
   // const exFields: [keyof Exercise, string][] = [["name", "Exercise name"], ["sets", "Sets"], ["reps", "Reps"], ["duration", "Rest"]];
 
@@ -601,25 +682,105 @@ function WorkoutsPage({ workouts, onSave, onDelete }: WorkoutsPageProps) {
               marginBottom: "10px"
             }}
           >
-            <input
-              list="exercise-name-suggestions"
-              value={newEx.name}
-              onChange={e => setNewEx(n => ({ ...n, name: e.target.value }))}
-              placeholder="Exercise name"
-              style={{
-                padding: "8px 10px",
-                borderRadius: "10px",
-                border: `1px solid ${BLUE_MID}`,
-                fontSize: "13px",
-                fontWeight: 500,
-                background: "white",
-                boxSizing: "border-box",
-                color: BLUE_DARK,
-                outline: "none",
-                boxShadow: "0 2px 8px rgba(59,130,246,0.06)",
-                transition: "all 0.3s ease"
-              }}
-            />
+            <div style={{ position: "relative" }}>
+  <input
+    value={exerciseQuery}
+    onChange={(e) => {
+      const value = e.target.value;
+      setExerciseQuery(value);
+      setNewEx((n) => ({ ...n, name: value }));
+      setShowSuggestions(true);
+    }}
+    onFocus={() => setShowSuggestions(true)}
+    placeholder="Exercise name"
+    style={{
+      padding: "8px 10px",
+      borderRadius: "10px",
+      border: `1px solid ${BLUE_MID}`,
+      fontSize: "13px",
+      fontWeight: 500,
+      background: "white",
+      boxSizing: "border-box",
+      color: BLUE_DARK,
+      outline: "none",
+      boxShadow: "0 2px 8px rgba(59,130,246,0.06)",
+      transition: "all 0.3s ease",
+      width: "100%"
+    }}
+  />
+
+  {showSuggestions && (
+    <div
+      style={{
+        position: "absolute",
+        top: "calc(100% + 6px)",
+        left: 0,
+        right: 0,
+        background: "white",
+        border: `1px solid ${BLUE_MID}`,
+        borderRadius: "12px",
+        boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
+        zIndex: 50,
+        maxHeight: "220px",
+        overflowY: "auto"
+      }}
+    >
+      {suggestionsLoading && (
+        <div style={{ padding: "10px 12px", fontSize: "12px", color: "#64748b" }}>
+          Searching...
+        </div>
+      )}
+
+      {!suggestionsLoading && suggestionsError && (
+        <div style={{ padding: "10px 12px", fontSize: "12px", color: "#dc2626" }}>
+          {suggestionsError}
+        </div>
+      )}
+
+      {!suggestionsLoading &&
+        !suggestionsError &&
+        exerciseSuggestions.map((exercise) => (
+          <button
+            key={exercise.id}
+            type="button"
+            onClick={() => {
+              setNewEx((n) => ({
+                ...n,
+                name: exercise.name,
+              }));
+              setExerciseQuery(exercise.name);
+              setShowSuggestions(false);
+            }}
+            style={{
+              width: "100%",
+              border: "none",
+              background: "white",
+              textAlign: "left",
+              padding: "10px 12px",
+              cursor: "pointer",
+              borderBottom: `1px solid ${BLUE_LIGHT}`
+            }}
+          >
+            <div style={{ fontSize: "13px", fontWeight: 700, color: BLUE_DARK }}>
+              {exercise.name}
+            </div>
+            <div style={{ fontSize: "11px", color: "#64748b" }}>
+              {exercise.bodyPart} · {exercise.target} · {exercise.equipment}
+            </div>
+          </button>
+        ))}
+
+      {!suggestionsLoading &&
+        !suggestionsError &&
+        exerciseQuery.trim() &&
+        exerciseSuggestions.length === 0 && (
+          <div style={{ padding: "10px 12px", fontSize: "12px", color: "#64748b" }}>
+            No matching exercises found
+          </div>
+        )}
+    </div>
+  )}
+</div>
 
             <input
               list="sets-suggestions"
@@ -1132,7 +1293,7 @@ export default function PTDashboard() {
 
     try{
       const {data, error}= await supabase
-        .from("Workouts")
+        .from("workout")
         .select("*")
         .eq("P_ID", sessionUser.id);
 
