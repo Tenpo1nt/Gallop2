@@ -64,9 +64,9 @@ const card: CSSProperties = {
 };
 
 const navItems = [
-  { id: "dashboard", label: "My PTs", icon: "🩺" },
-  { id: "messages", label: "Messages", icon: "💬", badge: 2 },
-  { id: "settings", label: "Settings", icon: "⚙️" },
+  { id: "dashboard", label: "My PTs", img: "/patients_sidebar_icon.png" },
+  { id: "messages", label: "Messages", img: "/messages_sidebar_icon.png", badge: 2 },
+  { id: "settings", label: "Settings", img: "/settings_sidebar_icon.png" },
 ] as const;
 
 function getInitials(fullName: string): string {
@@ -156,13 +156,13 @@ function PatientHomePage({ assignedPTs }: { assignedPTs: PT[] }) {
         workout.id !== workoutId
           ? workout
           : {
-              ...workout,
-              exercises: workout.exercises.map((exercise) =>
-                exercise.id !== exerciseId
-                  ? exercise
-                  : { ...exercise, completed: !exercise.completed }
-              ),
-            }
+            ...workout,
+            exercises: workout.exercises.map((exercise) =>
+              exercise.id !== exerciseId
+                ? exercise
+                : { ...exercise, completed: !exercise.completed }
+            ),
+          }
       )
     );
   };
@@ -778,12 +778,12 @@ export default function PatientDashboard() {
     <div className="dashboard-wrapper dashboard-patient">
       <aside className="dashboard-sidebar">
         <div className="sidebar-logo">
-          <div className="sidebar-logo-icon">🐴</div>
-          <div className="sidebar-logo-text">Gallop!</div>
+          <img src="/gallop_logo_white.png" alt="Gallop Logo" style={{ width: "50px", height: "50px", borderRadius: "12px", objectFit: "contain" }} />
+          <img src="/gallop_text_t.png" alt="Gallop" style={{ height: "35px", objectFit: "contain", marginTop: "6px" }} />
         </div>
 
         <div className="sidebar-profile">
-          <div className="sidebar-profile-icon">🌸</div>
+          <img src="/uma_p.png" alt="Patient" style={{ width: "35px", height: "35px", borderRadius: "50%", objectFit: "contain" }} />
           <div>
             <div className="sidebar-profile-name">{displayName}</div>
             <div className="sidebar-profile-role">Patient</div>
@@ -797,17 +797,17 @@ export default function PatientDashboard() {
               className={`sidebar-nav-btn ${activeTab === item.id ? "active" : ""}`}
               onClick={() => setActiveTab(item.id)}
             >
-              <span className="sidebar-nav-icon">{item.icon}</span>
+              <img src={item.img} alt={item.label} style={{ width: "40px", height: "40px", objectFit: "contain" }} />
               <span>{item.label}</span>
-              {"badge" in item && item.badge ? (
-                <span className="sidebar-badge">{item.badge}</span>
+              {"badge" in item && (item as any).badge ? (
+                <span className="sidebar-badge">{(item as any).badge}</span>
               ) : null}
             </button>
           ))}
         </nav>
 
         <button className="sidebar-logout-btn" onClick={handleLogout}>
-          <span>🚪</span>
+          <img src="/logout_sidebar_icon.png" alt="Log Out" style={{ width: "40px", height: "40px", objectFit: "contain" }} />
           <span>Log Out</span>
         </button>
       </aside>
