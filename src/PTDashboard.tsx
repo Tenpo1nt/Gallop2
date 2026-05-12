@@ -183,12 +183,11 @@ const pillBtn = (active: boolean): CSSProperties => ({
 
 // ── Nav Items ──────────────────────────────────────────────────────────────────
 const navItems = [
-  { id: "patients", label: "My Patients", icon: "👥" },
-  { id: "workouts", label: "Workout Creation", icon: "🏋️" },
-  { id: "messages", label: "Messages", icon: "💬" },
-  { id: "settings", label: "Settings", icon: "⚙️" },
+  { id: "patients", label: "My Patients", img: "/patients_sidebar_icon.png" },
+  { id: "workouts", label: "Workout Creation", img: "/workoutcreation_sidebar_icon.png" },
+  { id: "messages", label: "Messages", img: "/messages_sidebar_icon.png" },
+  { id: "settings", label: "Settings", img: "/settings_sidebar_icon.png" },
 ];
-
 // ══════════════════════════════════════════════════════════════════════════════
 // PAGE: MY PATIENTS
 // ══════════════════════════════════════════════════════════════════════════════
@@ -380,7 +379,7 @@ function WorkoutsPage({ workouts, onSave, onDelete }: WorkoutsPageProps) {
     setEditingId(w.id);
     setCreating(true);
   };
-  
+
   const addExercise = () => {
     if (!newEx.name) return;
     setForm(f => ({ ...f, exercises: [...f.exercises, { ...newEx }] }));
@@ -407,123 +406,123 @@ function WorkoutsPage({ workouts, onSave, onDelete }: WorkoutsPageProps) {
 
 
       <div style={{ marginBottom: "14px" }}>
-      <label
-        style={{
-          fontSize: "13px",
-          fontWeight: 700,
-          color: BLUE_DARK, // TODO: Select color based on theme
-          display: "block",
-          marginBottom: "6px"
-        }}
-      >
-        Workout List Name
-      </label>
-
-      <input
-        list="workout-name-suggestions"
-        value={form.name}
-        onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-        placeholder="e.g. Morning Knee Strengthening"
-        style={{
-          width: "100%",
-          padding: "10px 14px",
-          borderRadius: "12px",
-          border: `2px solid ${BLUE_MID}`,
-          fontSize: "14px",
-          fontWeight: 600,
-          background: BLUE_LIGHT,
-          boxSizing: "border-box",
-          color: BLUE_DARK,
-          outline: "none",
-          boxShadow: "0 2px 8px rgba(59,130,246,0.08)",
-          transition: "all 0.3s ease"
-        }}
-      />
-
-      <datalist id="workout-name-suggestions">
-        {workoutNameSuggestions.map((name) => (
-          <option key={name} value={name} />
-        ))}
-      </datalist>
-
-      <div
-        style={{
-          marginTop: "6px",
-          fontSize: "11px",
-          color: "#64748b",
-          fontWeight: 500
-        }}
-      >
-        Start typing to see suggested workout names.
-      </div>
-    </div>
-
-    {/* Icon Selection */}
-    <div style={{ marginBottom: "16px" }}>
-  <label
-    style={{
-      fontSize: "13px",
-      fontWeight: 700,
-      color: BLUE_DARK,
-      display: "block",
-      marginBottom: "8px"
-    }}
-  >
-    Workout Icon
-  </label>
-
-  <div
-    style={{
-      display: "flex",
-      flexWrap: "wrap",
-      gap: "10px",
-      padding: "12px",
-      borderRadius: "14px",
-      background: BLUE_LIGHT,
-      border: `1px solid ${BLUE_MID}`
-    }}
-  >
-    {workoutIconOptions.map((icon) => {
-      const active = form.icon === icon;
-
-      return (
-        <button
-          key={icon}
-          type="button"
-          onClick={() => setForm(f => ({ ...f, icon }))}
+        <label
           style={{
-            width: "44px",
-            height: "44px",
-            borderRadius: "12px",
-            border: active ? `2px solid ${BLUE}` : `1px solid ${BLUE_MID}`,
-            background: active ? "linear-gradient(135deg, #5ba3f5, #2563eb)" : "white",
-            color: active ? "white" : BLUE_DARK,
-            fontSize: "20px",
-            cursor: "pointer",
-            boxShadow: active
-              ? "0 4px 12px rgba(59,130,246,0.25)"
-              : "0 2px 8px rgba(59,130,246,0.06)",
-            transition: "all 0.3s ease"
+            fontSize: "13px",
+            fontWeight: 700,
+            color: BLUE_DARK, // TODO: Select color based on theme
+            display: "block",
+            marginBottom: "6px"
           }}
         >
-          {icon}
-        </button>
-      );
-    })}
-  </div>
+          Workout List Name
+        </label>
 
-  <div
-    style={{
-      marginTop: "6px",
-      fontSize: "11px",
-      color: "#64748b",
-      fontWeight: 500
-    }}
-  >
-    Choose an icon to represent this workout in your library.
-  </div>
-</div>
-      
+        <input
+          list="workout-name-suggestions"
+          value={form.name}
+          onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+          placeholder="e.g. Morning Knee Strengthening"
+          style={{
+            width: "100%",
+            padding: "10px 14px",
+            borderRadius: "12px",
+            border: `2px solid ${BLUE_MID}`,
+            fontSize: "14px",
+            fontWeight: 600,
+            background: BLUE_LIGHT,
+            boxSizing: "border-box",
+            color: BLUE_DARK,
+            outline: "none",
+            boxShadow: "0 2px 8px rgba(59,130,246,0.08)",
+            transition: "all 0.3s ease"
+          }}
+        />
+
+        <datalist id="workout-name-suggestions">
+          {workoutNameSuggestions.map((name) => (
+            <option key={name} value={name} />
+          ))}
+        </datalist>
+
+        <div
+          style={{
+            marginTop: "6px",
+            fontSize: "11px",
+            color: "#64748b",
+            fontWeight: 500
+          }}
+        >
+          Start typing to see suggested workout names.
+        </div>
+      </div>
+
+      {/* Icon Selection */}
+      <div style={{ marginBottom: "16px" }}>
+        <label
+          style={{
+            fontSize: "13px",
+            fontWeight: 700,
+            color: BLUE_DARK,
+            display: "block",
+            marginBottom: "8px"
+          }}
+        >
+          Workout Icon
+        </label>
+
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "10px",
+            padding: "12px",
+            borderRadius: "14px",
+            background: BLUE_LIGHT,
+            border: `1px solid ${BLUE_MID}`
+          }}
+        >
+          {workoutIconOptions.map((icon) => {
+            const active = form.icon === icon;
+
+            return (
+              <button
+                key={icon}
+                type="button"
+                onClick={() => setForm(f => ({ ...f, icon }))}
+                style={{
+                  width: "44px",
+                  height: "44px",
+                  borderRadius: "12px",
+                  border: active ? `2px solid ${BLUE}` : `1px solid ${BLUE_MID}`,
+                  background: active ? "linear-gradient(135deg, #5ba3f5, #2563eb)" : "white",
+                  color: active ? "white" : BLUE_DARK,
+                  fontSize: "20px",
+                  cursor: "pointer",
+                  boxShadow: active
+                    ? "0 4px 12px rgba(59,130,246,0.25)"
+                    : "0 2px 8px rgba(59,130,246,0.06)",
+                  transition: "all 0.3s ease"
+                }}
+              >
+                {icon}
+              </button>
+            );
+          })}
+        </div>
+
+        <div
+          style={{
+            marginTop: "6px",
+            fontSize: "11px",
+            color: "#64748b",
+            fontWeight: 500
+          }}
+        >
+          Choose an icon to represent this workout in your library.
+        </div>
+      </div>
+
       {/* <div style={{ marginBottom: "14px" }}>
         <label style={{ fontSize: "13px", fontWeight: 700, color: BLUE_DARK, display: "block", marginBottom: "6px" }}>Workout Name</label>
         <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
@@ -593,118 +592,118 @@ function WorkoutsPage({ workouts, onSave, onDelete }: WorkoutsPageProps) {
 
         {/* Input Row */}
 
-          <div
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "2fr 1fr 1fr 1fr",
+            gap: "8px",
+            marginBottom: "10px"
+          }}
+        >
+          <input
+            list="exercise-name-suggestions"
+            value={newEx.name}
+            onChange={e => setNewEx(n => ({ ...n, name: e.target.value }))}
+            placeholder="Exercise name"
             style={{
-              display: "grid",
-              gridTemplateColumns: "2fr 1fr 1fr 1fr",
-              gap: "8px",
-              marginBottom: "10px"
+              padding: "8px 10px",
+              borderRadius: "10px",
+              border: `1px solid ${BLUE_MID}`,
+              fontSize: "13px",
+              fontWeight: 500,
+              background: "white",
+              boxSizing: "border-box",
+              color: BLUE_DARK,
+              outline: "none",
+              boxShadow: "0 2px 8px rgba(59,130,246,0.06)",
+              transition: "all 0.3s ease"
             }}
-          >
-            <input
-              list="exercise-name-suggestions"
-              value={newEx.name}
-              onChange={e => setNewEx(n => ({ ...n, name: e.target.value }))}
-              placeholder="Exercise name"
-              style={{
-                padding: "8px 10px",
-                borderRadius: "10px",
-                border: `1px solid ${BLUE_MID}`,
-                fontSize: "13px",
-                fontWeight: 500,
-                background: "white",
-                boxSizing: "border-box",
-                color: BLUE_DARK,
-                outline: "none",
-                boxShadow: "0 2px 8px rgba(59,130,246,0.06)",
-                transition: "all 0.3s ease"
-              }}
-            />
+          />
 
-            <input
-              list="sets-suggestions"
-              value={newEx.sets}
-              onChange={e => setNewEx(n => ({ ...n, sets: e.target.value }))}
-              placeholder="Sets"
-              style={{
-                padding: "8px 10px",
-                borderRadius: "10px",
-                border: `1px solid ${BLUE_MID}`,
-                fontSize: "13px",
-                fontWeight: 500,
-                background: "white",
-                boxSizing: "border-box",
-                color: BLUE_DARK,
-                outline: "none",
-                boxShadow: "0 2px 8px rgba(59,130,246,0.06)",
-                transition: "all 0.3s ease"
-              }}
-            />
+          <input
+            list="sets-suggestions"
+            value={newEx.sets}
+            onChange={e => setNewEx(n => ({ ...n, sets: e.target.value }))}
+            placeholder="Sets"
+            style={{
+              padding: "8px 10px",
+              borderRadius: "10px",
+              border: `1px solid ${BLUE_MID}`,
+              fontSize: "13px",
+              fontWeight: 500,
+              background: "white",
+              boxSizing: "border-box",
+              color: BLUE_DARK,
+              outline: "none",
+              boxShadow: "0 2px 8px rgba(59,130,246,0.06)",
+              transition: "all 0.3s ease"
+            }}
+          />
 
-            <input
-              list="reps-suggestions"
-              value={newEx.reps}
-              onChange={e => setNewEx(n => ({ ...n, reps: e.target.value }))}
-              placeholder="Reps"
-              style={{
-                padding: "8px 10px",
-                borderRadius: "10px",
-                border: `1px solid ${BLUE_MID}`,
-                fontSize: "13px",
-                fontWeight: 500,
-                background: "white",
-                boxSizing: "border-box",
-                color: BLUE_DARK,
-                outline: "none",
-                boxShadow: "0 2px 8px rgba(59,130,246,0.06)",
-                transition: "all 0.3s ease"
-              }}
-            />
+          <input
+            list="reps-suggestions"
+            value={newEx.reps}
+            onChange={e => setNewEx(n => ({ ...n, reps: e.target.value }))}
+            placeholder="Reps"
+            style={{
+              padding: "8px 10px",
+              borderRadius: "10px",
+              border: `1px solid ${BLUE_MID}`,
+              fontSize: "13px",
+              fontWeight: 500,
+              background: "white",
+              boxSizing: "border-box",
+              color: BLUE_DARK,
+              outline: "none",
+              boxShadow: "0 2px 8px rgba(59,130,246,0.06)",
+              transition: "all 0.3s ease"
+            }}
+          />
 
-            <input
-              list="time-suggestions"
-              value={newEx.duration}
-              onChange={e => setNewEx(n => ({ ...n, duration: e.target.value }))}
-              placeholder="Time"
-              style={{
-                padding: "8px 10px",
-                borderRadius: "10px",
-                border: `1px solid ${BLUE_MID}`,
-                fontSize: "13px",
-                fontWeight: 500,
-                background: "white",
-                boxSizing: "border-box",
-                color: BLUE_DARK,
-                outline: "none",
-                boxShadow: "0 2px 8px rgba(59,130,246,0.06)",
-                transition: "all 0.3s ease"
-              }}
-            />
+          <input
+            list="time-suggestions"
+            value={newEx.duration}
+            onChange={e => setNewEx(n => ({ ...n, duration: e.target.value }))}
+            placeholder="Time"
+            style={{
+              padding: "8px 10px",
+              borderRadius: "10px",
+              border: `1px solid ${BLUE_MID}`,
+              fontSize: "13px",
+              fontWeight: 500,
+              background: "white",
+              boxSizing: "border-box",
+              color: BLUE_DARK,
+              outline: "none",
+              boxShadow: "0 2px 8px rgba(59,130,246,0.06)",
+              transition: "all 0.3s ease"
+            }}
+          />
 
-            <datalist id="exercise-name-suggestions">
-              {exerciseSuggestions.map((item) => (
-                <option key={item} value={item} />
-              ))}
-            </datalist>
+          <datalist id="exercise-name-suggestions">
+            {exerciseSuggestions.map((item) => (
+              <option key={item} value={item} />
+            ))}
+          </datalist>
 
-            <datalist id="sets-suggestions">
-              {setsSuggestions.map((item) => (
-                <option key={item} value={item} />
-              ))}
-            </datalist>
+          <datalist id="sets-suggestions">
+            {setsSuggestions.map((item) => (
+              <option key={item} value={item} />
+            ))}
+          </datalist>
 
-            <datalist id="reps-suggestions">
-              {repsSuggestions.map((item) => (
-                <option key={item} value={item} />
-              ))}
-            </datalist>
+          <datalist id="reps-suggestions">
+            {repsSuggestions.map((item) => (
+              <option key={item} value={item} />
+            ))}
+          </datalist>
 
-            <datalist id="time-suggestions">
-              {timeSuggestions.map((item) => (
-                <option key={item} value={item} />
-              ))}
-            </datalist>
-          </div>
+          <datalist id="time-suggestions">
+            {timeSuggestions.map((item) => (
+              <option key={item} value={item} />
+            ))}
+          </datalist>
+        </div>
 
         {/* <div
           style={{
@@ -757,67 +756,67 @@ function WorkoutsPage({ workouts, onSave, onDelete }: WorkoutsPageProps) {
         {/* <button onClick={() => setCreating(false)} style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "1px solid #e2e8f0", background: "white", fontWeight: 700, cursor: "pointer", color: "#64748b" }}>Cancel</button>
         <button onClick={handleSave} style={{ flex: 2, padding: "12px", borderRadius: "12px", border: "none", background: `linear-gradient(135deg, #5ba3f5, #2563eb)`, fontWeight: 700, cursor: "pointer", color: "white", boxShadow: "0 4px 12px rgba(59,130,246,0.35)" }}>💾 Save Workout</button> */}
         <button
-        onClick={() => setCreating(false)}
-        // disabled={!formValid}
-        style={{
-          flex: 1,
-          padding: "12px",
-          borderRadius: "12px",
-          border: "1px solid #e2e8f0",
-          background: "white",
-          fontWeight: 700,
-          cursor: "pointer",
-          color: "#64748b"
+          onClick={() => setCreating(false)}
+          // disabled={!formValid}
+          style={{
+            flex: 1,
+            padding: "12px",
+            borderRadius: "12px",
+            border: "1px solid #e2e8f0",
+            background: "white",
+            fontWeight: 700,
+            cursor: "pointer",
+            color: "#64748b"
 
-          // background: formValid
-          //   ? "linear-gradient(135deg, #5ba3f5, #2563eb)"
-          //   : "#cbd5e1",
-          // boxShadow: formValid
-          //   ? "0 4px 12px rgba(59,130,246,0.35)"
-          //   : "none",
-          // opacity: formValid ? 1 : 0.7,
-          // transition: "all 0.25s ease"
-        }}
-      >
-        Cancel
-      </button>
-      <button
-        onClick={handleSave}
-        disabled={!formValid}
-        style={{
-          flex: 2,
-          padding: "12px",
-          borderRadius: "12px",
-          border: "none",
-          fontWeight: 700,
-          color: "white",
-          cursor: formValid ? "pointer" : "not-allowed",
-          background: formValid
-            ? "linear-gradient(135deg, #5ba3f5, #2563eb)"
-            : "#cbd5e1",
-          boxShadow: formValid
-            ? "0 4px 12px rgba(59,130,246,0.35)"
-            : "none",
-          opacity: formValid ? 1 : 0.7,
-          transition: "all 0.25s ease"
-        }}
-      >
-        💾 Save Workout
-      </button>
+            // background: formValid
+            //   ? "linear-gradient(135deg, #5ba3f5, #2563eb)"
+            //   : "#cbd5e1",
+            // boxShadow: formValid
+            //   ? "0 4px 12px rgba(59,130,246,0.35)"
+            //   : "none",
+            // opacity: formValid ? 1 : 0.7,
+            // transition: "all 0.25s ease"
+          }}
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={!formValid}
+          style={{
+            flex: 2,
+            padding: "12px",
+            borderRadius: "12px",
+            border: "none",
+            fontWeight: 700,
+            color: "white",
+            cursor: formValid ? "pointer" : "not-allowed",
+            background: formValid
+              ? "linear-gradient(135deg, #5ba3f5, #2563eb)"
+              : "#cbd5e1",
+            boxShadow: formValid
+              ? "0 4px 12px rgba(59,130,246,0.35)"
+              : "none",
+            opacity: formValid ? 1 : 0.7,
+            transition: "all 0.25s ease"
+          }}
+        >
+          💾 Save Workout
+        </button>
       </div>
       {!formValid && (
-      <div
-        style={{
-          fontSize: "12px",
-          color: "#94a3b8",
-          marginTop: "8px",
-          fontWeight: 500
-        }}
-      >
-        Please enter a workout name and add at least one exercise.
-      </div>
-    )}
-  </div>
+        <div
+          style={{
+            fontSize: "12px",
+            color: "#94a3b8",
+            marginTop: "8px",
+            fontWeight: 500
+          }}
+        >
+          Please enter a workout name and add at least one exercise.
+        </div>
+      )}
+    </div>
   );
 
   return (
@@ -831,8 +830,8 @@ function WorkoutsPage({ workouts, onSave, onDelete }: WorkoutsPageProps) {
           <div key={w.id} style={{ background: "#f8faff", borderRadius: "16px", border: `1px solid ${BLUE_MID}`, overflow: "hidden" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                
-                
+
+
                 {/* <div style={{ width: "38px", height: "38px", borderRadius: "10px", background: BLUE_MID, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>🏋️</div> */}
                 <div
                   style={{
@@ -849,7 +848,7 @@ function WorkoutsPage({ workouts, onSave, onDelete }: WorkoutsPageProps) {
                 >
                   {w.icon || "🏋️"}
                 </div>
-                
+
                 <div>
                   <div style={{ fontWeight: 700, fontSize: "14px", color: BLUE_DARK }}>{w.name}</div>
                   <div style={{ fontSize: "12px", color: "#94a3b8" }}>{w.exercises.length} exercises</div>
@@ -1127,40 +1126,40 @@ export default function PTDashboard() {
     };
 
     const loadWorkouts = async () => {
-    if(!sessionUser) return;
+      if (!sessionUser) return;
 
 
-    try{
-      const {data, error}= await supabase
-        .from("Workouts")
-        .select("*")
-        .eq("P_ID", sessionUser.id);
+      try {
+        const { data, error } = await supabase
+          .from("Workouts")
+          .select("*")
+          .eq("P_ID", sessionUser.id);
 
 
-      if(error){
-        console.error("Error fetching workouts:", error.message);
-        return;
+        if (error) {
+          console.error("Error fetching workouts:", error.message);
+          return;
+        }
+
+
+        const formatted: Workout[] = (data || []).map((row: any) => ({
+          id: String(row.WO_ID),
+          name: row.WO_Name,
+          icon: row.WO_Icon || "🏋️",
+          exercises: [
+            {
+              name: row.Exercise_Name,
+              sets: row.Sets,
+              reps: row.Reps,
+              duration: row.Rest_Time,
+            }
+          ]
+        }));
+        setWorkouts(formatted);
+      } catch (err) {
+        console.error("Unexpected error loading workouts:", err);
       }
-
-
-      const formatted: Workout[] = (data || []).map((row: any) => ({
-        id: String(row.WO_ID),
-        name: row.WO_Name,
-        icon: row.WO_Icon || "🏋️",
-        exercises:[
-          {
-            name: row.Exercise_Name,
-            sets: row.Sets,
-            reps: row.Reps,
-            duration: row.Rest_Time,
-          }
-        ]
-    }));
-    setWorkouts(formatted);
-    } catch (err) {
-      console.error("Unexpected error loading workouts:", err);
-    }
-  };
+    };
 
     void loadAssignedPatients();
     void loadWorkouts();
@@ -1210,7 +1209,7 @@ export default function PTDashboard() {
     setPatients(prev => prev.map(p => p.id === id ? { ...p, ...changes } : p));
 
   const saveWorkout = (editingId: string | null, form: { name: string; icon: string; exercises: Exercise[] }) => {
-    if (editingId){
+    if (editingId) {
       setWorkouts(prev =>
         prev.map(w => w.id === editingId ? { ...w, ...form } : w)
       );
@@ -1236,26 +1235,26 @@ export default function PTDashboard() {
   };
 
   return (
-     <div className="dashboard-wrapper dashboard-pt">
+    <div className="dashboard-wrapper dashboard-pt">
       {/* Sidebar */}
       <div style={{ width: "220px", flexShrink: 0, background: "linear-gradient(180deg, #5ba3f5 0%, #3b82f6 60%, #2563eb 100%)", display: "flex", flexDirection: "column", padding: "22px 14px", boxShadow: "4px 0 20px rgba(59,130,246,0.25)", zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px", paddingLeft: "6px" }}>
-          <div style={{ width: "38px", height: "38px", background: "white", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>🐴</div>
-          <span style={{ color: "white", fontWeight: 800, fontSize: "19px" }}>Gallop!</span>
+          <img src="/gallop_logo_white.png" alt="Gallop Logo" style={{ width: "50px", height: "50px", borderRadius: "12px", objectFit: "contain" }} />
+          <img src="/gallop_text_blue.png" alt="Gallop" style={{ height: "35px", objectFit: "contain", marginTop: "6px" }} />
         </div>
 
         <div style={{ background: "rgba(255,255,255,0.2)", borderRadius: "14px", padding: "11px 13px", marginBottom: "22px", display: "flex", alignItems: "center", gap: "9px", border: "1px solid rgba(255,255,255,0.3)" }}>
-          <div style={{ width: "34px", height: "34px", background: "white", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px" }}>🩺</div>
+          <img src="/uma_pt.png" alt="PT" style={{ width: "35px", height: "35px", borderRadius: "50%", objectFit: "contain" }} />
           <div>
-            <div style={{ color: "white", fontWeight: 700, fontSize: "12px" }}>{displayName}</div>
-            <div style={{ color: "rgba(255,255,255,0.75)", fontSize: "10px" }}>Physical Therapist</div>
+            <div style={{ color: "white", fontWeight: 700, fontSize: "18px" }}>{displayName}</div>
+            <div style={{ color: "rgba(255,255,255,0.75)", fontSize: "15px" }}>Physical Therapist</div>
           </div>
         </div>
 
         <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
-          {navItems.map(item => (
+          {navItems.map(item => item && (
             <button key={item.id} onClick={() => setActiveNav(item.id)} style={{ display: "flex", alignItems: "center", gap: "11px", padding: "10px 13px", borderRadius: "12px", border: "none", cursor: "pointer", background: activeNav === item.id ? "rgba(255,255,255,0.25)" : "transparent", color: "white", fontWeight: activeNav === item.id ? 700 : 500, fontSize: "13px", textAlign: "left" }}>
-              <span style={{ fontSize: "15px" }}>{item.icon}</span>
+              {<img src={item.img} alt={item.label} style={{ width: "40px", height: "40px", objectFit: "contain" }} />}
               {item.label}
               {item.id === "messages" && patients.length > 0 && <span style={{ marginLeft: "auto", background: "#f97316", color: "white", borderRadius: "99px", fontSize: "10px", fontWeight: 800, padding: "2px 6px" }}>{patients.length}</span>}
             </button>
@@ -1263,7 +1262,8 @@ export default function PTDashboard() {
         </nav>
 
         <button onClick={handleLogout} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 13px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.3)", cursor: "pointer", background: "transparent", color: "rgba(255,255,255,0.85)", fontWeight: 600, fontSize: "13px" }}>
-          <span>🚪</span> Log Out
+          <img src="/logout_sidebar_icon.png" alt="Log Out" style={{ width: "40px", height: "40px", objectFit: "contain" }} />
+          Log Out
         </button>
       </div>
 
