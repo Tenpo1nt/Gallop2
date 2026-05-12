@@ -66,10 +66,10 @@ const pillBtn = (active: boolean, color: "blue" | "amber" = "blue"): CSSProperti
 });
 
 const navItems = [
-  { id: "patients", label: "Patients", icon: "🧑‍🦽" },
-  { id: "therapists", label: "Physical Therapists", icon: "🩺" },
-  { id: "add-user", label: "Add User", icon: "➕" },
-  { id: "settings", label: "Settings", icon: "⚙️" },
+  { id: "patients", label: "Patients", img: "/patients_sidebar_icon.png" },
+  { id: "therapists", label: "Physical Therapists", img: "/pt_sidebar_icon.png" },
+  { id: "add-user", label: "Add User", img: "/workoutcreation_sidebar_icon.png" },
+  { id: "settings", label: "Settings", img: "/settings_sidebar_icon.png" },
 ];
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -172,7 +172,7 @@ function PatientsPage({ patients, pts, assignments, onAssign, loading }: Patient
       <div style={{ flex: 1 }}>
         {!selectedPatient ? (
           <div style={{ ...card, height: "300px", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "12px" }}>
-            <div style={{ fontSize: "48px" }}>👈</div>
+            <img src="/carrot.png" alt="Select a patient" style={{ width: "80px", height: "80px", objectFit: "contain" }} />
             <div style={{ color: "#94a3b8", fontWeight: 600 }}>Select a patient to manage their assignment</div>
           </div>
         ) : (
@@ -331,7 +331,7 @@ function TherapistsPage({ pts, patients, assignments, loading }: TherapistsPageP
       <div style={{ flex: 1 }}>
         {!selectedPt ? (
           <div style={{ ...card, height: "300px", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "12px" }}>
-            <div style={{ fontSize: "48px" }}>👈</div>
+            <img src="/carrot.png" alt="Select a patient" style={{ width: "80px", height: "80px", objectFit: "contain" }} />
             <div style={{ color: "#94a3b8", fontWeight: 600 }}>Select a PT to view their patients</div>
           </div>
         ) : (
@@ -452,7 +452,13 @@ function AddUserPage({ onUserAdded }: { onUserAdded: () => void }) {
                   onClick={() => setRole(r)}
                   style={{ flex: 1, padding: "10px", borderRadius: "12px", border: `2px solid ${active ? c.color : c.border}`, background: active ? c.bg : "white", color: c.color, fontWeight: active ? 800 : 600, cursor: "pointer", fontSize: "13px", transition: "all 0.15s" }}
                 >
-                  {r === "patient" ? "🧑‍🦽 Patient" : r === "pt" ? "🩺 PT" : "🛡 Admin"}
+                  {r === "patient" ? (
+                    <><img src="/uma_p.png" alt="Patient" style={{ width: "24px", height: "24px", objectFit: "contain" }} /> Patient</>
+                  ) : r === "pt" ? (
+                    <><img src="/uma_pt.png" alt="PT" style={{ width: "24px", height: "24px", objectFit: "contain" }} /> PT</>
+                  ) : (
+                    <><img src="/uma_a.png" alt="Admin" style={{ width: "24px", height: "24px", objectFit: "contain" }} /> Admin</>
+                  )}
                 </button>
               );
             })}
@@ -477,7 +483,7 @@ function AddUserPage({ onUserAdded }: { onUserAdded: () => void }) {
           disabled={saving || !fullName.trim()}
           style={{ width: "100%", padding: "13px", borderRadius: "14px", border: "none", background: saving || !fullName.trim() ? "#cbd5e1" : `linear-gradient(135deg, #5ba3f5, #2563eb)`, fontWeight: 700, cursor: saving || !fullName.trim() ? "not-allowed" : "pointer", color: "white", fontSize: "14px", transition: "background 0.3s" }}
         >
-          {saving ? "Adding..." : "➕ Add User"}
+          {saving ? "Adding..." : "Add User"}
         </button>
 
         {message && (
@@ -682,13 +688,12 @@ export default function AdminDashboard() {
       {/* Sidebar */}
       <div style={{ width: "220px", flexShrink: 0, background: "linear-gradient(180deg, #f59e0b 0%, #d97706 60%, #b45309 100%)", display: "flex", flexDirection: "column", padding: "22px 14px", boxShadow: "4px 0 20px rgba(217,119,6,0.25)", zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px", paddingLeft: "6px" }}>
-          <div style={{ width: "38px", height: "38px", background: "white", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>🐴</div>
-          <span style={{ color: "white", fontWeight: 800, fontSize: "19px" }}>Gallop!</span>
+          <img src="/gallop_logo_white.png" alt="Gallop Logo" style={{ width: "50px", height: "50px", borderRadius: "12px", objectFit: "contain" }} />
+          <img src="/gallop_text_orange.png" alt="Gallop" style={{ height: "35px", objectFit: "contain", marginTop: "6px" }} />
         </div>
 
         <div style={{ background: "rgba(255,255,255,0.2)", borderRadius: "14px", padding: "11px 13px", marginBottom: "22px", display: "flex", alignItems: "center", gap: "9px", border: "1px solid rgba(255,255,255,0.3)" }}>
-          <div style={{ width: "34px", height: "34px", background: "white", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px" }}>🛡️</div>
-          <div>
+          <img src="/uma_a.png" alt="Admin" style={{ width: "35px", height: "35px", borderRadius: "50%", objectFit: "contain" }} />          <div>
             <div style={{ color: "white", fontWeight: 700, fontSize: "12px" }}>{displayName}</div>
             <div style={{ color: "rgba(255,255,255,0.75)", fontSize: "10px" }}>Administrator</div>
           </div>
@@ -701,7 +706,7 @@ export default function AdminDashboard() {
               onClick={() => setActiveNav(item.id)}
               style={{ display: "flex", alignItems: "center", gap: "11px", padding: "10px 13px", borderRadius: "12px", border: "none", cursor: "pointer", background: activeNav === item.id ? "rgba(255,255,255,0.25)" : "transparent", color: "white", fontWeight: activeNav === item.id ? 700 : 500, fontSize: "13px", textAlign: "left" }}
             >
-              <span style={{ fontSize: "15px" }}>{item.icon}</span>
+              <img src={item.img} alt={item.label} style={{ width: "40px", height: "40px", objectFit: "contain" }} />
               {item.label}
             </button>
           ))}
@@ -711,7 +716,8 @@ export default function AdminDashboard() {
           onClick={handleLogout}
           style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 13px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.3)", cursor: "pointer", background: "transparent", color: "rgba(255,255,255,0.85)", fontWeight: 600, fontSize: "13px" }}
         >
-          <span>🚪</span> Log Out
+          <img src="/logout_sidebar_icon.png" alt="Log Out" style={{ width: "40px", height: "40px", objectFit: "contain" }} />
+          Log Out
         </button>
       </div>
 
