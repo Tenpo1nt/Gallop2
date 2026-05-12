@@ -43,18 +43,11 @@ function toPatientCard(userId: string | number, fullName: string): Patient {
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 const workoutIconOptions = [
-  "🏋️",
-  "💪",
-  "🦵",
-  "🦶",
-  "⚖️",
-  "🧘",
-  "🏃",
-  "🤸",
-  "❤️",
-  "🦴",
-  "🩺",
-  "🔥",
+  "/Power.png",
+  "/Guts.png",
+  "/Speed.png",
+  "/Stamina.png",
+  "/Wit.png",
 ];
 
 const exerciseSuggestions = [
@@ -125,48 +118,7 @@ interface MessageThread {
 
 // ── Mock Data ──────────────────────────────────────────────────────────────────
 
-// TODO: Replace with real data fetching and persistence logic
-const workoutNameSuggestions = [
-  "Morning Knee Strengthening",
-  "Balance & Stability Routine",
-  "Shoulder Mobility Flow",
-  "Lower Back Relief Routine",
-  "Ankle Mobility Recovery",
-  "Hip Strength Builder",
-  "Post-Surgery Rehab Plan",
-  "Core Stability Session",
-  "Daily Flexibility Flow",
-  "Gentle Recovery Routine",
-];
-
-const initialWorkouts: Workout[] = [
-  {
-    id: "w1", name: "Morning Knee Strengthening",
-    icon: "🏋️",
-    exercises: [
-      { name: "Quad Sets", sets: 3, reps: 10, duration: "30 sec rest" },
-      { name: "Straight Leg Raises", sets: 3, reps: 8, duration: "45 sec rest" },
-      { name: "Hamstring Curls", sets: 3, reps: 12, duration: "30 sec rest" },
-    ]
-  },
-  {
-    id: "w2", name: "Balance & Stability Routine",
-    icon: "🤸",
-    exercises: [
-      { name: "Single Leg Stand", sets: 3, reps: 30, duration: "30 sec hold" },
-      { name: "Heel-Toe Walking", sets: 2, reps: 10, duration: "20 sec rest" },
-    ]
-  },
-  {
-    id: "w3", name: "Shoulder Mobility Flow",
-    icon: "💪",
-    exercises: [
-      { name: "Pendulum Swings", sets: 2, reps: 15, duration: "20 sec rest" },
-      { name: "Wall Slides", sets: 3, reps: 10, duration: "30 sec rest" },
-      { name: "Band Pull-Aparts", sets: 3, reps: 12, duration: "30 sec rest" },
-    ]
-  },
-];
+const initialWorkouts: Workout[] = [];
 
 const initialMessages: MessageThread[] = [];
 
@@ -219,7 +171,6 @@ function PatientsPage({ patients, workouts, onUpdatePatient }: PatientsPageProps
       <div style={{ ...card, width: "300px", flexShrink: 0, overflowY: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
           <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 800, color: BLUE_DARK }}>My Patients</h2>
-          <button style={pillBtn(true)}>+ Add</button>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {patients.length === 0 ? (
@@ -256,7 +207,7 @@ function PatientsPage({ patients, workouts, onUpdatePatient }: PatientsPageProps
       <div style={{ flex: 1 }}>
         {!patient ? (
           <div style={{ ...card, height: "400px", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "12px" }}>
-            <div style={{ fontSize: "48px" }}>👈</div>
+            <img src="/carrot.png" alt="Select a patient" style={{ width: "80px", height: "0px", objectFit: "contain" }} />
             <div style={{ color: "#94a3b8", fontWeight: 600 }}>Select a patient to view their details</div>
           </div>
         ) : (
@@ -520,11 +471,7 @@ function WorkoutsPage({ workouts, onSave, onDelete }: WorkoutsPageProps) {
           }}
         />
 
-        <datalist id="workout-name-suggestions">
-          {workoutNameSuggestions.map((name) => (
-            <option key={name} value={name} />
-          ))}
-        </datalist>
+      
 
         <div
           style={{
@@ -561,6 +508,7 @@ function WorkoutsPage({ workouts, onSave, onDelete }: WorkoutsPageProps) {
             borderRadius: "14px",
             background: BLUE_LIGHT,
             border: `1px solid ${BLUE_MID}`
+
           }}
         >
           {workoutIconOptions.map((icon) => {
@@ -576,17 +524,20 @@ function WorkoutsPage({ workouts, onSave, onDelete }: WorkoutsPageProps) {
                   height: "44px",
                   borderRadius: "12px",
                   border: active ? `2px solid ${BLUE}` : `1px solid ${BLUE_MID}`,
-                  background: active ? "linear-gradient(135deg, #5ba3f5, #2563eb)" : "white",
+                  background: active ? "linear-gradient(135deg, #5ba3f5, #2563eb)" : "transparent",
                   color: active ? "white" : BLUE_DARK,
-                  fontSize: "20px",
                   cursor: "pointer",
                   boxShadow: active
                     ? "0 4px 12px rgba(59,130,246,0.25)"
                     : "0 2px 8px rgba(59,130,246,0.06)",
-                  transition: "all 0.3s ease"
+                  transition: "all 0.3s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "0"
                 }}
               >
-                {icon}
+                <img src={icon} alt={icon} style={{ width: "28px", height: "28px", objectFit: "contain" }} />
               </button>
             );
           })}
@@ -866,32 +817,6 @@ function WorkoutsPage({ workouts, onSave, onDelete }: WorkoutsPageProps) {
           </datalist>
         </div>
 
-        {/* <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "2fr 1fr 1fr 1fr",
-            gap: "8px",
-            marginBottom: "10px"
-          }}
-        >
-          {exFields.map(([k, ph]) => (
-            <input
-              key={k}
-              value={newEx[k] as string}
-              onChange={e => setNewEx(n => ({ ...n, [k]: e.target.value }))}
-              placeholder={ph}
-              style={{
-                padding: "8px 10px",
-                borderRadius: "10px",
-                border: `1px solid ${BLUE_MID}`,
-                fontSize: "13px",
-                background: "white",
-                boxSizing: "border-box",
-                color: BLUE_DARK
-              }}
-            />
-          ))}
-        </div> */}
 
         <button
           onClick={addExercise}
@@ -900,18 +825,6 @@ function WorkoutsPage({ workouts, onSave, onDelete }: WorkoutsPageProps) {
           Add Exercise
         </button>
       </div>
-
-      {/* <div style={{ background: BLUE_LIGHT, borderRadius: "14px", padding: "16px", margin: "10px 0 20px", border: `1px solid ${BLUE_MID}` }}>
-        <div style={{ fontSize: "13px", fontWeight: 700, color: BLUE_DARK, marginBottom: "10px" }}>+ Add Exercise</div>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: "8px", marginBottom: "10px" }}>
-          {exFields.map(([k, ph]) => (
-            <input key={k} value={newEx[k] as string} onChange={e => setNewEx(n => ({ ...n, [k]: e.target.value }))}
-              placeholder={ph}
-              style={{ padding: "8px 10px", borderRadius: "10px", border: `1px solid ${BLUE_MID}`, fontSize: "13px", background: "white", boxSizing: "border-box" }} />
-          ))}
-        </div>
-        <button onClick={addExercise} style={{ ...pillBtn(true), padding: "8px 16px", fontSize: "13px" }}>Add Exercise</button>
-      </div> */}
 
       <div style={{ display: "flex", gap: "10px" }}>
         {/* <button onClick={() => setCreating(false)} style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "1px solid #e2e8f0", background: "white", fontWeight: 700, cursor: "pointer", color: "#64748b" }}>Cancel</button>
@@ -992,8 +905,6 @@ function WorkoutsPage({ workouts, onSave, onDelete }: WorkoutsPageProps) {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
 
-
-                {/* <div style={{ width: "38px", height: "38px", borderRadius: "10px", background: BLUE_MID, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>🏋️</div> */}
                 <div
                   style={{
                     width: "38px",
@@ -1007,7 +918,7 @@ function WorkoutsPage({ workouts, onSave, onDelete }: WorkoutsPageProps) {
                     boxShadow: "0 2px 8px rgba(59,130,246,0.08)"
                   }}
                 >
-                  {w.icon || "🏋️"}
+                  <img src={w.icon} alt="icon" style={{ width: "28px", height: "28px", objectFit: "contain" }} />
                 </div>
 
                 <div>
